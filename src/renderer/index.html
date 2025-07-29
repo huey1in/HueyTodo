@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data:; connect-src 'self' https://international.v1.hitokoto.cn">
+  <title>Huey Todo</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234285f4'><circle cx='12' cy='12' r='10'/><path d='M9 12l2 2 4-4' stroke='white' stroke-width='2' fill='none'/></svg>">
+
+  <link rel="preload" href="css/main.css" as="style">
+  <link rel="preload" href="assets/libs/sober.min.js" as="script">
+  <link rel="preload" href="js/core/data-manager.js" as="script">
+  <link rel="preload" href="js/config/i18n.js" as="script">
+  <link rel="stylesheet" href="css/main.css">
+
+  <script src="assets/libs/sober.min.js" defer onerror="handleSoberLoadError()"></script>
+  <script src="js/core/data-manager.js" defer></script>
+  <script src="js/config/i18n.js" defer></script>
+  <script src="js/services/notification-service.js" defer></script>
+  <script src="js/utils/notify.js" defer></script>
+  <script src="js/utils/animations.js" defer></script>
+  <script src="js/services/sync-service.js" defer></script>
+  <script src="js/services/settings-service.js" defer></script>
+  <script src="js/config/international.js" defer></script>
+  <script src="js/pages/today-page.js" defer></script>
+  <script src="js/pages/stats-page.js" defer></script>
+  <script src="js/utils/tools.js" defer></script>
+  <script src="js/core/core.js" defer></script>
+  <script src="js/pages/view-controller.js" defer></script>
+  <script src="js/services/user-service.js" defer></script>
+  <script src="js/utils/loader.js" defer></script>
+</head>
+<body>
+  <div class="app-wrapper">
+    <!-- Mac风格窗口标题栏 -->
+    <div class="titlebar">
+      <div class="titlebar-controls">
+        <button id="close-btn" title="关闭">✕</button>
+        <button id="minimize-btn" title="最小化">−</button>
+      </div>
+      <div class="titlebar-text">Huey Todo</div>
+      <div class="titlebar-right-controls">
+        <button id="pin-btn" title="置顶窗口" class="pin-btn">📌</button>
+      </div>
+    </div>
+
+    <div class="app-content">
+      <div class="app-container">
+        <!-- 侧边栏导航 -->
+        <div class="sidebar">
+          <div class="sidebar-header">
+            <div class="logo">
+              <div class="logo-icon">
+                <div class="logo-circle"></div>
+                <div class="logo-circle"></div>
+              </div>
+              <div class="logo-text">Huey Todo</div>
+            </div>
+            <s-button type="text" icon="menu" class="sidebar-toggle" id="toggle-sidebar">
+              <img src="assets/icons/sidebar-toggle.svg" data-i18n-alt="tooltip.toggle" alt="收起/展开" class="toggle-icon">
+            </s-button>
+          </div>
+          
+          <div class="sidebar-content">
+            <s-list>
+              <div class="nav-item active" data-view="stats-view">
+                <div class="nav-icon-container">
+                  <s-icon class="nav-icon" name="insights"></s-icon>
+                  <img src="assets/icons/stats.svg" data-i18n-alt="nav.stats" alt="统计" class="nav-icon-svg">
+                </div>
+                <span data-i18n="nav.stats">统计</span>
+              </div>
+              <div class="nav-item" data-view="today-view">
+                <div class="nav-icon-container">
+                  <s-icon class="nav-icon" name="today"></s-icon>
+                  <img src="assets/icons/today.svg" data-i18n-alt="nav.today" alt="今日待办" class="nav-icon-svg">
+                </div>
+                <span data-i18n="nav.today">今日待办</span>
+              </div>
+              <div class="nav-item" data-view="todo-view">
+                <div class="nav-icon-container">
+                  <s-icon class="nav-icon" name="task_alt"></s-icon>
+                  <img src="assets/icons/todo.svg" data-i18n-alt="nav.todos" alt="我的待办" class="nav-icon-svg">
+                </div>
+                <span data-i18n="nav.todos">我的待办</span>
+              </div>
+              <div class="nav-item" data-view="settings-view">
+                <div class="nav-icon-container">
+                  <s-icon class="nav-icon" name="settings"></s-icon>
+                  <img src="assets/icons/settings.svg" data-i18n-alt="nav.settings" alt="设置" class="nav-icon-svg">
+                </div>
+                <span data-i18n="nav.settings">设置</span>
+              </div>
+            </s-list>
+          </div>
+          
+          <!-- 用户信息卡片 -->
+          <div class="custom-user-card">
+            <div class="user-info" tabindex="0" data-view="user-view">
+              <div class="custom-avatar">
+                <img src="assets/icon.png" data-i18n-alt="user.guest" alt="用户头像" class="avatar-svg">
+              </div>
+              <div class="user-details">
+                <div class="user-name" data-i18n="user.guest">User</div>
+                <div class="user-email" data-i18n="user.clickToView">点击查看个人信息</div>
+              </div>
+            </div>
+          </div>
+        </div>
+    
+        <!-- 主内容区域 -->
+        <div class="main-content">
+          <!-- 统计页面 -->
+          <div id="stats-view" class="view active">
+            <h2 class="page-title" data-i18n="stats.title">统计概览</h2>
+
+            <!-- 问候语和一言 -->
+            <div class="greeting-section">
+              <div class="greeting-text" id="greeting-text">
+                <span class="greeting-time" data-i18n="greeting.morning">早上好！</span>
+                <span class="greeting-emoji">🌅</span>
+              </div>
+              <div class="hitokoto-container">
+                <div class="hitokoto-text" id="hitokoto-text">
+                  <span class="hitokoto-content">正在加载一言...</span>
+                  <span class="hitokoto-loading">✨</span>
+                </div>
+                <div class="hitokoto-from" id="hitokoto-from" style="display: none;">
+                  <span class="hitokoto-author"></span>
+                  <span class="hitokoto-source"></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="stats-container">
+              <!-- 使用线性进度条显示各类任务情况 -->
+              <div class="stats-linear-section">
+                <div class="stats-linear-card">
+                  <div class="stats-header">
+                    <h3 data-i18n="stats.pending">待办任务</h3>
+                    <div class="stats-value-small">0</div>
+                  </div>
+                  <s-linear-progress value="0" animated="true" class="pending-progress"></s-linear-progress>
+                </div>
+
+                <div class="stats-linear-card">
+                  <div class="stats-header">
+                    <h3 data-i18n="stats.completed">已完成任务</h3>
+                    <div class="stats-value-small">0</div>
+                  </div>
+                  <s-linear-progress value="0" animated="true" class="completed-progress"></s-linear-progress>
+                </div>
+
+                <div class="stats-linear-card">
+                  <div class="stats-header">
+                    <h3 data-i18n="stats.overdue">超期任务</h3>
+                    <div class="stats-value-small">0</div>
+                  </div>
+                  <s-linear-progress value="0" animated="true" class="overdue-progress"></s-linear-progress>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 今日待办页面 -->
+          <div id="today-view" class="view">
+            <div class="today-header">
+              <h2 class="page-title" data-i18n="today.title">今日待办</h2>
+              <div class="today-date">
+                <span id="today-date-text"></span>
+              </div>
+            </div>
+
+            <!-- 今日待办筛选和搜索 -->
+            <div class="today-filters">
+              <s-button-group>
+                <s-button type="outlined" class="today-filter-btn active" data-filter="pending" data-i18n="todo.filter.pending">待办</s-button>
+                <s-button type="outlined" class="today-filter-btn" data-filter="completed" data-i18n="todo.filter.completed">已完成</s-button>
+                <s-button type="outlined" class="today-filter-btn" data-filter="overdue" data-i18n="today.filter.overdue">逾期</s-button>
+              </s-button-group>
+
+              <!-- 搜索框 -->
+              <div class="search-container">
+                <s-text-field
+                  id="today-search"
+                  data-i18n-label="search.placeholder"
+                  label="搜索今日待办..."
+                  prefix-icon="search"
+                  clearable
+                  style="width: 200px; --s-text-field-height: 36px;">
+                </s-text-field>
+              </div>
+            </div>
+
+            <!-- 今日待办空状态 -->
+            <div id="today-empty-state" class="empty-state" style="display: none;">
+              <div class="empty-state-content">
+                <div class="empty-state-icon">
+                  <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="currentColor" opacity="0.3"/>
+                  </svg>
+                </div>
+                <h3 class="empty-state-title" data-i18n="today.empty.title">今日无待办事项</h3>
+                <p class="empty-state-description" data-i18n="today.empty.description">
+                  今天没有安排的待办事项，享受轻松的一天吧！
+                </p>
+              </div>
+            </div>
+
+            <!-- 今日待办列表 -->
+            <div class="today-list" id="today-list">
+              <!-- 今日待办项目将通过JavaScript动态加载 -->
+            </div>
+          </div>
+
+          <!-- 待办事项页面 -->
+          <div id="todo-view" class="view">
+            <div class="todo-header">
+              <h2 class="page-title" data-i18n="todo.title">我的待办</h2>
+              <s-button type="filled" id="add-todo-btn" data-i18n="todo.addNew">新建待办</s-button>
+            </div>
+
+            <!-- 新建待办事项模态框 -->
+            <s-dialog id="todo-dialog">
+              <div slot="headline" data-i18n="dialog.newTodo">新建待办事项</div>
+              <div class="dialog-content">
+                <div class="form-field">
+                  <s-text-field id="todo-title" data-i18n-label="dialog.title" label="标题" full-width required></s-text-field>
+                </div>
+
+                <div class="form-field">
+                  <s-date-picker id="todo-due-date" data-i18n-label="dialog.dueDate" label="截止日期" format="yyyy-MM-dd" locale="zh-CN"></s-date-picker>
+                </div>
+
+                <div class="form-field">
+                  <s-picker id="todo-priority" data-i18n-label="dialog.priority" label="优先级">
+                    <s-picker-item value="high">
+                      <div style="display: flex; align-items: center; gap: 8px;">
+                        <s-icon name="flag" style="color: #d32f2f;"></s-icon>
+                        <span data-i18n="todo.priority.high">高优先级</span>
+                      </div>
+                    </s-picker-item>
+                    <s-picker-item value="medium" selected>
+                      <div style="display: flex; align-items: center; gap: 8px;">
+                        <s-icon name="flag" style="color: #ff8f00;"></s-icon>
+                        <span data-i18n="todo.priority.medium">中优先级</span>
+                      </div>
+                    </s-picker-item>
+                    <s-picker-item value="low">
+                      <div style="display: flex; align-items: center; gap: 8px;">
+                        <s-icon name="flag" style="color: #388e3c;"></s-icon>
+                        <span data-i18n="todo.priority.low">低优先级</span>
+                      </div>
+                    </s-picker-item>
+                  </s-picker>
+                </div>
+
+                <div class="form-field">
+                  <s-text-field id="todo-desc" data-i18n-label="dialog.description" label="待办内容" type="multiLine" style="min-height: 80px" full-width></s-text-field>
+                </div>
+
+                <div class="form-field">
+                  <s-picker id="todo-category" data-i18n-label="dialog.category" label="分类">
+                    <s-picker-item value="general" selected data-i18n="todo.category.general">常规</s-picker-item>
+                    <s-picker-item value="work" data-i18n="todo.category.work">工作</s-picker-item>
+                    <s-picker-item value="personal" data-i18n="todo.category.personal">个人</s-picker-item>
+                    <s-picker-item value="life" data-i18n="todo.category.life">人生</s-picker-item>
+                    <s-picker-item value="yearly" data-i18n="todo.category.yearly">年度</s-picker-item>
+                    <s-picker-item value="monthly" data-i18n="todo.category.monthly">月度</s-picker-item>
+                    <s-picker-item value="daily" data-i18n="todo.category.daily">日常</s-picker-item>
+                  </s-picker>
+                </div>
+              </div>
+
+              <div slot="action">
+                <s-button type="text" id="cancel-todo-btn" data-i18n="dialog.cancel">取消</s-button>
+                <s-button type="filled" id="save-todo-btn" data-i18n="dialog.save">保存</s-button>
+              </div>
+            </s-dialog>
+
+            <!-- 添加子项模态框 -->
+            <s-dialog id="child-todo-dialog">
+              <div slot="headline" data-i18n="dialog.addChild">添加子项</div>
+              <div class="dialog-content">
+                <div class="form-field">
+                  <s-text-field id="child-title" data-i18n-label="dialog.title" label="子项标题" full-width required></s-text-field>
+                </div>
+
+                <div class="form-field">
+                  <s-text-field id="child-description" data-i18n-label="dialog.description" label="子项描述（可选）" type="multiLine" style="min-height: 60px" full-width></s-text-field>
+                </div>
+
+                <div class="form-field">
+                  <s-picker id="child-priority" data-i18n-label="dialog.priority" label="优先级">
+                    <s-picker-item value="low" data-i18n="todo.priority.low">低优先级</s-picker-item>
+                    <s-picker-item value="medium" selected data-i18n="todo.priority.medium">中优先级</s-picker-item>
+                    <s-picker-item value="high" data-i18n="todo.priority.high">高优先级</s-picker-item>
+                  </s-picker>
+                </div>
+
+                <div class="form-field">
+                  <s-date-picker id="child-due-date" data-i18n-label="dialog.dueDate" label="截止日期（可选）" format="yyyy-MM-dd" locale="zh-CN"></s-date-picker>
+                </div>
+              </div>
+
+              <div slot="action">
+                <s-button type="text" id="cancel-child-btn" data-i18n="dialog.cancel">取消</s-button>
+                <s-button type="filled" id="save-child-btn" data-i18n="dialog.save">创建子项</s-button>
+              </div>
+            </s-dialog>
+
+            <div class="todo-filters">
+              <s-button-group>
+                <s-button type="outlined" class="filter-btn" data-filter="all" data-i18n="todo.filter.all">全部</s-button>
+                <s-button type="outlined" class="filter-btn active" data-filter="pending" data-i18n="todo.filter.pending">待办</s-button>
+                <s-button type="outlined" class="filter-btn" data-filter="completed" data-i18n="todo.filter.completed">已完成</s-button>
+              </s-button-group>
+
+              <!-- 搜索框 -->
+              <div class="search-container">
+                <s-text-field
+                  id="todo-search"
+                  data-i18n-label="search.placeholder"
+                  label="搜索待办..."
+                  prefix-icon="search"
+                  clearable
+                  style="width: 200px; --s-text-field-height: 36px;">
+                </s-text-field>
+              </div>
+            </div>
+            
+            <!-- 空状态 -->
+            <div class="empty-state" id="empty-state" style="display: none;">
+              <div class="empty-state-content">
+                <div class="empty-state-icon">
+                  <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V5H19V19Z" fill="currentColor" opacity="0.3"/>
+                    <path d="M12 7V17M7 12H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                </div>
+                <h3 class="empty-state-title" data-i18n="todo.empty.title">还没有待办事项</h3>
+                <p class="empty-state-description" data-i18n="todo.empty.description">
+                  创建您的第一个待办事项，开始高效管理您的任务和目标。
+                </p>
+                <s-button type="filled" class="empty-state-button" id="empty-state-add-btn" data-i18n="todo.empty.addFirst">
+                  创建第一个待办
+                </s-button>
+              </div>
+            </div>
+
+            <div class="todo-list" id="todo-list">
+              <!-- 待办项目将通过JavaScript动态加载 -->
+            </div>
+          </div>
+          
+          <!-- 设置页面 -->
+          <div id="settings-view" class="view">
+            <h2 class="page-title" data-i18n="settings.title">设置</h2>
+
+            <div class="settings-container">
+              <div class="settings-section">
+                <h3 class="settings-section-title" data-i18n="settings.theme">主题设置</h3>
+
+                <div class="settings-item">
+                  <div class="settings-item-label" data-i18n="settings.themeColor">主题色</div>
+                  <div class="theme-colors">
+                    <div class="theme-color-option" data-color="#0078d4" style="background-color: #0078d4;"></div>
+                    <div class="theme-color-option" data-color="#107c41" style="background-color: #107c41;"></div>
+                    <div class="theme-color-option" data-color="#d83b01" style="background-color: #d83b01;"></div>
+                    <div class="theme-color-option" data-color="#8764b8" style="background-color: #8764b8;"></div>
+                    <div class="theme-color-option" data-color="#5c2d91" style="background-color: #5c2d91;"></div>
+                    <div class="theme-color-option" data-color="#008575" style="background-color: #008575;"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="settings-section">
+                <h3 class="settings-section-title" data-i18n="settings.language">语言设置</h3>
+
+                <div class="settings-item">
+                  <div class="settings-item-label" data-i18n="settings.selectLanguage">选择语言</div>
+                  <s-picker id="language-picker">
+                    <s-picker-item value="zh-CN">简体中文</s-picker-item>
+                    <s-picker-item value="en-US">English</s-picker-item>
+                    <s-picker-item value="ja-JP">日本語</s-picker-item>
+                  </s-picker>
+                </div>
+              </div>
+
+              <div class="settings-section">
+                <h3 class="settings-section-title" data-i18n="settings.startup">应用设置</h3>
+
+                <div class="settings-item">
+                  <div class="settings-item-label" data-i18n="settings.startupView">启动时显示</div>
+                  <s-picker id="startup-view">
+                    <s-picker-item value="stats-view" data-i18n="nav.stats">统计页面</s-picker-item>
+                    <s-picker-item value="today-view" data-i18n="nav.today">今日待办</s-picker-item>
+                    <s-picker-item value="todo-view" data-i18n="nav.todos">待办事项</s-picker-item>
+                    <s-picker-item value="settings-view" data-i18n="nav.settings">设置页面</s-picker-item>
+                  </s-picker>
+                </div>
+              </div>
+
+              <div class="settings-section">
+                <h3 class="settings-section-title" data-i18n="settings.todoSync">待办同步</h3>
+
+                <div class="settings-item">
+                  <div class="settings-item-info">
+                    <div class="settings-item-label" data-i18n="settings.autoParentSync">自动父项同步</div>
+                    <div class="settings-item-description" data-i18n="settings.autoParentSyncDesc">当所有子项完成时自动完成父项，当任何子项取消完成时自动取消父项完成</div>
+                  </div>
+                  <s-switch id="auto-parent-sync" checked></s-switch>
+                </div>
+              </div>
+
+              <div class="settings-section">
+                <h3 class="settings-section-title" data-i18n="settings.notifications">通知设置</h3>
+
+                <div class="settings-item">
+                  <div class="settings-item-info">
+                    <div class="settings-item-label" data-i18n="settings.enableNotifications">启用桌面通知</div>
+                    <div class="settings-item-description" data-i18n="settings.enableNotificationsDesc">允许应用发送桌面通知提醒</div>
+                  </div>
+                  <s-switch id="enable-notifications" checked></s-switch>
+                </div>
+
+                <div class="settings-item">
+                  <div class="settings-item-label" data-i18n="settings.dailyReminderTime">每日提醒时间</div>
+                  <input type="time" id="daily-reminder-time" value="20:00" class="time-input">
+                </div>
+
+                <div class="settings-item">
+                  <div class="settings-item-label" data-i18n="settings.overdueWarningDays">逾期提醒提前天数</div>
+                  <s-picker id="overdue-warning-days">
+                    <s-picker-item value="0">当天</s-picker-item>
+                    <s-picker-item value="1" selected>1天前</s-picker-item>
+                    <s-picker-item value="2">2天前</s-picker-item>
+                    <s-picker-item value="3">3天前</s-picker-item>
+                  </s-picker>
+                </div>
+
+
+
+                <div class="settings-item">
+                  <button id="test-notification-btn" class="btn btn-text" data-i18n="settings.testNotification">测试通知</button>
+                </div>
+              </div>
+
+              <div class="settings-actions">
+                <button id="reset-settings-btn" class="btn btn-text" data-i18n="settings.reset">重置设置</button>
+                <button id="save-settings-btn" class="btn btn-filled" data-i18n="settings.save">保存设置</button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 用户信息页面 -->
+          <div id="user-view" class="view">
+            <h2 class="page-title" data-i18n="profile.title">个人信息</h2>
+
+            <div class="development-notice">
+              <div class="notice-icon">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="#0078d4"/>
+                </svg>
+              </div>
+
+              <div class="notice-content">
+                <h3 class="notice-title" data-i18n="profile.developing">功能正在开发中</h3>
+                <p class="notice-description" data-i18n="profile.description">
+                  个人信息管理功能正在开发中，我们计划使用后端数据库来实现用户账户系统，包括：
+                </p>
+
+                <ul class="feature-list">
+                  <li data-i18n="profile.features.register">用户注册与登录</li>
+                  <li data-i18n="profile.features.profile">个人资料管理</li>
+                  <li data-i18n="profile.features.avatar">头像上传</li>
+                  <li data-i18n="profile.features.password">密码修改</li>
+                  <li data-i18n="profile.features.sync">数据同步</li>
+                </ul>
+
+                <p class="notice-footer" data-i18n="profile.footer">
+                  敬请期待！目前您可以正常使用待办事项功能，所有数据都会安全保存在本地。
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 编辑待办事项模态框 -->
+  <s-dialog id="edit-todo-dialog">
+    <div slot="headline" data-i18n="dialog.editTodo">编辑待办事项</div>
+    <div class="dialog-content">
+      <div class="form-field">
+        <s-text-field id="edit-todo-title" data-i18n-label="dialog.title" label="标题" full-width required></s-text-field>
+      </div>
+
+      <div class="form-field">
+        <s-date-picker id="edit-todo-due-date" data-i18n-label="dialog.dueDate" label="截止日期" format="yyyy-MM-dd" locale="zh-CN"></s-date-picker>
+      </div>
+
+      <div class="form-field">
+        <s-picker id="edit-todo-priority" data-i18n-label="dialog.priority" label="优先级">
+          <s-picker-item value="high">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <s-icon name="flag" style="color: #d32f2f;"></s-icon>
+              <span data-i18n="todo.priority.high">高优先级</span>
+            </div>
+          </s-picker-item>
+          <s-picker-item value="medium">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <s-icon name="flag" style="color: #ff8f00;"></s-icon>
+              <span data-i18n="todo.priority.medium">中优先级</span>
+            </div>
+          </s-picker-item>
+          <s-picker-item value="low">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <s-icon name="flag" style="color: #388e3c;"></s-icon>
+              <span data-i18n="todo.priority.low">低优先级</span>
+            </div>
+          </s-picker-item>
+        </s-picker>
+      </div>
+
+      <div class="form-field">
+        <s-text-field id="edit-todo-desc" data-i18n-label="dialog.description" label="待办内容" type="multiLine" style="min-height: 80px" full-width></s-text-field>
+      </div>
+
+      <div class="form-field">
+        <s-picker id="edit-todo-category" data-i18n-label="dialog.category" label="分类">
+          <s-picker-item value="general" data-i18n="todo.category.general">常规</s-picker-item>
+          <s-picker-item value="work" data-i18n="todo.category.work">工作</s-picker-item>
+          <s-picker-item value="personal" data-i18n="todo.category.personal">个人</s-picker-item>
+          <s-picker-item value="life" data-i18n="todo.category.life">人生</s-picker-item>
+          <s-picker-item value="yearly" data-i18n="todo.category.yearly">年度</s-picker-item>
+          <s-picker-item value="monthly" data-i18n="todo.category.monthly">月度</s-picker-item>
+          <s-picker-item value="daily" data-i18n="todo.category.daily">日常</s-picker-item>
+        </s-picker>
+      </div>
+    </div>
+
+    <div slot="action">
+      <s-button type="text" id="cancel-edit-todo-btn" data-i18n="dialog.cancel">取消</s-button>
+      <s-button type="filled" id="save-edit-todo-btn" data-i18n="dialog.save">保存</s-button>
+    </div>
+  </s-dialog>
+  
+  <!-- SoberUI降级加载处理 -->
+  <script>
+    // SoberUI加载错误处理函数
+    function handleSoberLoadError() {
+      console.warn('本地SoberUI加载失败，尝试从node_modules加载...');
+
+      // 动态加载降级版本
+      const fallbackScript = document.createElement('script');
+      fallbackScript.src = './node_modules/sober/dist/sober.min.js';
+      fallbackScript.onload = () => {
+        console.log('SoberUI从node_modules加载成功');
+      };
+      fallbackScript.onerror = () => {
+        console.error('SoberUI加载完全失败');
+        showResourceError();
+      };
+      document.head.appendChild(fallbackScript);
+    }
+
+    // 显示资源加载错误
+    function showResourceError() {
+      document.body.innerHTML = `
+        <div style="display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5;">
+          <div style="background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-align: center; max-width: 400px;">
+            <div style="font-size: 48px; margin-bottom: 20px;">!</div>
+            <h2 style="color: #d32f2f; margin: 0 0 16px 0; font-size: 20px;">资源加载失败</h2>
+            <p style="color: #666; margin: 0 0 24px 0; line-height: 1.5;">
+              SoberUI组件库加载失败，请检查网络连接或重新启动应用。
+            </p>
+            <button onclick="location.reload()" style="background: #0078d4; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">
+              重新加载
+            </button>
+          </div>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html> 

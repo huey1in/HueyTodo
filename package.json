@@ -1,0 +1,103 @@
+{
+  "name": "huey-todo",
+  "version": "1.0.0",
+  "description": "Huey Todo - 桌面待办事项应用",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux",
+    "dist": "electron-builder --publish=never",
+    "lint": "eslint src/ --ext .js",
+    "lint:fix": "eslint src/ --ext .js --fix",
+    "format": "prettier --write \"src/**/*.{js,html,css,json}\"",
+    "format:check": "prettier --check \"src/**/*.{js,html,css,json}\"",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test:unit": "echo \"Unit tests not implemented yet\"",
+    "test:integration": "echo \"Integration tests not implemented yet\"",
+    "test:e2e": "echo \"E2E tests not implemented yet\"",
+    "clean": "rimraf dist/ build/",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "keywords": [
+    "electron",
+    "desktop",
+    "todo"
+  ],
+  "author": "Huey Todo Team <contact@hueytodo.com>",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^28.1.0",
+    "electron-builder": "^26.0.12",
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.5",
+    "rimraf": "^5.0.5"
+  },
+  "dependencies": {
+    "mdui": "^2.0.3",
+    "nedb": "^1.8.0",
+    "sober": "^1.0.0"
+  },
+  "build": {
+    "appId": "com.hueytodo.app",
+    "productName": "Huey Todo",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
+      "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
+      "!**/node_modules/*.d.ts",
+      "!**/node_modules/.bin",
+      "!**/*.{iml,o,hprof,orig,pyc,pyo,rbc,swp,csproj,sln,xproj}",
+      "!.editorconfig",
+      "!**/._*",
+      "!**/{.DS_Store,.git,.hg,.svn,CVS,RCS,SCCS,.gitignore,.gitattributes}",
+      "!**/{__pycache__,thumbs.db,.flowconfig,.idea,.vs,.nyc_output}",
+      "!**/{appveyor.yml,.travis.yml,circle.yml}",
+      "!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}"
+    ],
+    "win": {
+      "icon": "assets/favicon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "mac": {
+      "icon": "assets/icon.icns",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        }
+      ]
+    },
+    "linux": {
+      "icon": "assets/",
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": ["x64"]
+        },
+        {
+          "target": "deb",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Huey Todo"
+    }
+  }
+}
