@@ -87,9 +87,7 @@ Hueytodo/
 
 - **框架**: Electron
 - **UI库**: SoberUI
-- **数据库**: NeDB
 - **构建工具**: electron-builder
-- **代码规范**: ESLint + Prettier
 
 ## 🤝 贡献指南
 
