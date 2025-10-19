@@ -108,7 +108,3 @@ Hueytodo/
 **1ing** - [2926957031@qq.com](mailto:2926957031@qq.com)
 
 项目链接: [https://github.com/1ingg/hueytodo](https://github.com/1ingg/hueytodo)
-
-## 🙏 致谢
-
-感谢所有为这个项目做出贡献的开发者！
